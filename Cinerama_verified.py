@@ -135,4 +135,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main() будет код
+    main() 
+
+#© Phoenix 89S.
