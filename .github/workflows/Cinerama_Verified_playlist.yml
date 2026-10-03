@@ -2,15 +2,16 @@ name: Update CINERAMA Verified Playlist
 
 on:
   schedule:
-    # Запуск каждый день в 03:00 по UTC
+    # Каждый день в 03:00 UTC
     - cron: '0 3 * * *'
 
+  # Ручной запуск
   workflow_dispatch:
 
+  # Запуск при изменении скрипта или workflow
   push:
-    # Запуск при изменении скрипта или самого workflow
     paths:
-      - 'Verified_channels.py'
+      - 'Cinerama_verified.py'
       - '.github/workflows/update-playlist.yml'
 
 permissions:
@@ -24,9 +25,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -43,15 +41,21 @@ jobs:
 
       - name: Install dependencies
         run: |
-          # Если есть requirements.txt:
-          # pip install -r requirements.txt
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install requests
+          fi
 
-          # Если requirements.txt нет:
-          pip install requests
+      - name: Download Cinerama_verified.py
+        run: |
+          curl -fL \
+            "https://raw.githubusercontent.com/Phoenix89S/IpTV_Ru_verified_2026/main/Cinerama_verified.py" \
+            -o Cinerama_verified.py
 
       - name: Run playlist generator
         run: |
-          python Verified_channels.py
+          python Cinerama_verified.py
 
       - name: Check for changes
         id: git_status
@@ -72,7 +76,7 @@ jobs:
         run: |
           git add CINERAMA_VERIFIED.m3u
 
-          COMMIT_MSG="chore: update CINERAMA_VERIFIED.m3u [ci skip] ($(date +'%Y-%m-%d'))"
+          COMMIT_MSG="chore: update CINERAMA_VERIFIED.m3u ($(date +'%Y-%m-%d'))"
 
           git commit -m "$COMMIT_MSG"
 
