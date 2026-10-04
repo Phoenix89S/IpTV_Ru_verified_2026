@@ -20,6 +20,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -34,6 +37,12 @@ jobs:
       - name: Run playlist generator
         run: |
           python Cinerama_verified.py
+
+      - name: Upload artifact (виртуальная машина → GitHub)
+        uses: actions/upload-artifact@v4
+        with:
+          name: CINERAMA_VERIFIED
+          path: CINERAMA_VERIFIED.m3u
 
       - name: Check for changes
         id: git_status
@@ -52,4 +61,4 @@ jobs:
         run: |
           git add CINERAMA_VERIFIED.m3u
           git commit -m "chore: update CINERAMA_VERIFIED.m3u ($(date +'%Y-%m-%d')) © Phoenix 89S"
-          git push
+          git push origin ${{ github.ref_name }}
