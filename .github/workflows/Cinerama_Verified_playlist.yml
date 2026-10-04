@@ -38,11 +38,13 @@ jobs:
         run: |
           python Cinerama_verified.py
 
-      - name: Upload artifact (виртуальная машина → GitHub)
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CINERAMA_VERIFIED
-          path: CINERAMA_VERIFIED.m3u
+          name: CINERAMA_OUTPUTS
+          path: |
+            CINERAMA_VERIFIED.m3u
+            SKALA_DREG_REPORT.txt
 
       - name: Check for changes
         id: git_status
@@ -50,7 +52,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --exit-code --quiet CINERAMA_VERIFIED.m3u; then
+          if git diff --exit-code --quiet CINERAMA_VERIFIED.m3u SKALA_DREG_REPORT.txt; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
@@ -60,5 +62,9 @@ jobs:
         if: steps.git_status.outputs.changed == 'true'
         run: |
           git add CINERAMA_VERIFIED.m3u
-          git commit -m "chore: update CINERAMA_VERIFIED.m3u ($(date +'%Y-%m-%d')) © Phoenix 89S"
+          git add SKALA_DREG_REPORT.txt
+
+          COMMIT_MSG="chore: update CINERAMA_VERIFIED.m3u & SKALA_DREG_REPORT.txt ($(date +'%Y-%m-%d')) © Phoenix 89S"
+
+          git commit -m "$COMMIT_MSG"
           git push origin ${{ github.ref_name }}
