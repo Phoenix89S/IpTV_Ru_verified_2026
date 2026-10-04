@@ -1,5 +1,5 @@
 === SCALA‑DREG STREAM PROCESSOR REPORT ===
-Дата запуска: 2026-10-04 21:27:16.589819 UTC
+Дата запуска: 2026-10-04 21:57:55.922303 UTC
 
 [DREG] Обработка EXTINF → #EXTINF:-1 tvg-logo="https://iptvx.one/picons/ducktv.png" group-title="Aggregator - Axenov / Детские",Duck TV
 [DREG] Замена хоста: stream8.cinerama.uz → stream1.cinerama.uz
