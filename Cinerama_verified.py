@@ -1,8 +1,9 @@
-# ====================
-# CINERAMA STREAM8 → STREAM1
+# =============================================================
+#              CINERAMA STREAM8 → STREAM1
+# =============================================================
 # © Phoenix 89S. All rights reserved.
-# ====================
 
+import os
 import re
 import requests
 
@@ -11,7 +12,8 @@ SOURCE_URL = (
     "refs/heads/main/IPTV_MEGA_PLAYLIST.m3u"
 )
 
-OUTPUT_FILE = "CINERAMA_VERIFIED.m3u"
+# Файл создаётся строго рядом со скриптом → GitHub Actions всегда его видит
+OUTPUT_FILE = os.path.join(os.path.dirname(__file__), "CINERAMA_VERIFIED.m3u")
 
 OLD_HOST = "stream8.cinerama.uz"
 NEW_HOST = "stream1.cinerama.uz"
@@ -19,8 +21,11 @@ NEW_GROUP = "Verified channels"
 COPYRIGHT = "© Phoenix 89S"
 
 
-def replace_group_title(extinf: str) -> str:
-    """Меняет или добавляет group-title."""
+def replace_group_title(extinf):
+    """
+    Меняет ТОЛЬКО значение group-title или добавляет его,
+    если атрибут отсутствует.
+    """
     pattern = r'group-title="[^"]*"'
 
     if re.search(pattern, extinf, flags=re.IGNORECASE):
@@ -46,8 +51,8 @@ def replace_group_title(extinf: str) -> str:
 def main():
     print("==============================================")
     print(f"     CINERAMA STREAM8 → STREAM1 | {COPYRIGHT}")
-    print("==============================================\n")
-
+    print("==============================================")
+    print()
     print("[INFO] Загружаем исходный M3U...")
 
     try:
@@ -57,45 +62,66 @@ def main():
             headers={"User-Agent": "Mozilla/5.0"}
         )
         response.raise_for_status()
-    except Exception as e:
-        print(f"[ERROR] Не удалось загрузить плейлист: {e}")
+    except requests.exceptions.RequestException as e:
+        print(f"\n[ERROR] Не удалось загрузить плейлист: {e}")
         return
 
     lines = response.text.splitlines()
     total_lines = len(lines)
 
+    # Инициализация плейлиста с добавлением копирайта в шапку
     result = [
         "#EXTM3U",
         f"# Playlist optimized by {COPYRIGHT} - {NEW_GROUP}"
     ]
 
     found = 0
+    i = 0
 
     print(f"[INFO] Сканирование и обработка потоков ({total_lines} строк)...")
 
-    for i in range(1, total_lines):
+    while i < total_lines:
         line = lines[i].strip()
 
         if OLD_HOST in line:
-            extinf = lines[i - 1].strip()
-            if extinf.startswith("#EXTINF:"):
-                extinf = replace_group_title(extinf)
+            if i > 0 and lines[i - 1].strip().startswith("#EXTINF:"):
+                extinf = replace_group_title(lines[i - 1].strip())
+
+                # Замена хоста
                 url = line.replace(
                     f"https://{OLD_HOST}",
                     f"https://{NEW_HOST}"
                 )
+
                 result.append(extinf)
                 result.append(url)
                 found += 1
 
+        i += 1
+
+    # Запись результата с копирайтом
     try:
-        with open(OUTPUT_FILE, "w", encoding="utf-8", newline="\n") as f:
+        with open(
+            OUTPUT_FILE,
+            "w",
+            encoding="utf-8",
+            newline="\n"
+        ) as f:
             f.write("\n".join(result) + "\n")
-    except Exception as e:
-        print(f"[ERROR] Ошибка записи файла: {e}")
+    except IOError as e:
+        print(f"\n[ERROR] Ошибка записи файла: {e}")
         return
 
-    print("\n==============================================")
+    # Гарантия, что файл реально создан (важно для GitHub Actions)
+    if not os.path.exists(OUTPUT_FILE):
+        print(f"[ERROR] Файл не создан: {OUTPUT_FILE}")
+        return
+
+    print(f"[INFO] Файл успешно создан: {OUTPUT_FILE}")
+
+    # Итоговый отчёт со шкалой статуса и копирайтом
+    print()
+    print("==============================================")
     print("[ OK ] ОБРАБОТКА УСПЕШНО ЗАВЕРШЕНА")
     print("==============================================")
     print(f" Автор / Copyright        : {COPYRIGHT}")
