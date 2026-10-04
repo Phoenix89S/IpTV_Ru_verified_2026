@@ -2,13 +2,8 @@ name: Update CINERAMA Verified Playlist
 
 on:
   schedule:
-    # Каждый день в 03:00 UTC
     - cron: '0 3 * * *'
-
-  # Ручной запуск
   workflow_dispatch:
-
-  # Запуск при изменении скрипта или workflow
   push:
     paths:
       - 'Cinerama_verified.py'
@@ -31,28 +26,10 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          else
-            pip install requests
-          fi
-
-      - name: Download Cinerama_verified.py
-        run: |
-          curl -fL \
-            "https://raw.githubusercontent.com/Phoenix89S/IpTV_Ru_verified_2026/main/Cinerama_verified.py" \
-            -o Cinerama_verified.py
+          pip install requests
 
       - name: Run playlist generator
         run: |
@@ -66,19 +43,13 @@ jobs:
 
           if git diff --exit-code --quiet CINERAMA_VERIFIED.m3u; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "Файл не изменился, коммит не требуется."
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "Файл изменился, готовим коммит."
           fi
 
       - name: Commit and Push changes
         if: steps.git_status.outputs.changed == 'true'
         run: |
           git add CINERAMA_VERIFIED.m3u
-
-          COMMIT_MSG="chore: update CINERAMA_VERIFIED.m3u ($(date +'%Y-%m-%d')) © Phoenix 89S"
-
-          git commit -m "$COMMIT_MSG"
-
-          git push origin HEAD:${{ github.ref_name }}
+          git commit -m "chore: update CINERAMA_VERIFIED.m3u ($(date +'%Y-%m-%d')) © Phoenix 89S"
+          git push
