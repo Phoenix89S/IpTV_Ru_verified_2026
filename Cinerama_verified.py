@@ -1,7 +1,7 @@
-# ============================================================
-#              CINERAMA STREAM8 → STREAM1
-# ============================================================
+# ====================
+# CINERAMA STREAM8 → STREAM1
 # © Phoenix 89S. All rights reserved.
+# ====================
 
 import re
 import requests
@@ -19,11 +19,8 @@ NEW_GROUP = "Verified channels"
 COPYRIGHT = "© Phoenix 89S"
 
 
-def replace_group_title(extinf):
-    """
-    Меняет ТОЛЬКО значение group-title или добавляет его,
-    если атрибут отсутствует.
-    """
+def replace_group_title(extinf: str) -> str:
+    """Меняет или добавляет group-title."""
     pattern = r'group-title="[^"]*"'
 
     if re.search(pattern, extinf, flags=re.IGNORECASE):
@@ -49,72 +46,56 @@ def replace_group_title(extinf):
 def main():
     print("==============================================")
     print(f"     CINERAMA STREAM8 → STREAM1 | {COPYRIGHT}")
-    print("==============================================")
-    print()
+    print("==============================================\n")
+
     print("[INFO] Загружаем исходный M3U...")
 
     try:
         response = requests.get(
             SOURCE_URL,
             timeout=60,
-            headers={
-                "User-Agent": "Mozilla/5.0"
-            }
+            headers={"User-Agent": "Mozilla/5.0"}
         )
         response.raise_for_status()
-    except requests.exceptions.RequestException as e:
-        print(f"\n[ERROR] Не удалось загрузить плейлист: {e}")
+    except Exception as e:
+        print(f"[ERROR] Не удалось загрузить плейлист: {e}")
         return
 
     lines = response.text.splitlines()
     total_lines = len(lines)
 
-    # Инициализация плейлиста с добавлением копирайта в шапку
     result = [
         "#EXTM3U",
         f"# Playlist optimized by {COPYRIGHT} - {NEW_GROUP}"
     ]
-    
+
     found = 0
-    i = 0
 
     print(f"[INFO] Сканирование и обработка потоков ({total_lines} строк)...")
 
-    while i < total_lines:
+    for i in range(1, total_lines):
         line = lines[i].strip()
 
         if OLD_HOST in line:
-            if i > 0 and lines[i - 1].strip().startswith("#EXTINF:"):
-                extinf = replace_group_title(lines[i - 1].strip())
-                
-                # Замена хоста
+            extinf = lines[i - 1].strip()
+            if extinf.startswith("#EXTINF:"):
+                extinf = replace_group_title(extinf)
                 url = line.replace(
                     f"https://{OLD_HOST}",
                     f"https://{NEW_HOST}"
                 )
-
                 result.append(extinf)
                 result.append(url)
                 found += 1
 
-        i += 1
-
-    # Запись результата с копирайтом
     try:
-        with open(
-            OUTPUT_FILE,
-            "w",
-            encoding="utf-8",
-            newline="\n"
-        ) as f:
+        with open(OUTPUT_FILE, "w", encoding="utf-8", newline="\n") as f:
             f.write("\n".join(result) + "\n")
-    except IOError as e:
-        print(f"\n[ERROR] Ошибка записи файла: {e}")
+    except Exception as e:
+        print(f"[ERROR] Ошибка записи файла: {e}")
         return
 
-    # Итоговый отчёт со шкалой статуса и копирайтом
-    print()
-    print("==============================================")
+    print("\n==============================================")
     print("[ OK ] ОБРАБОТКА УСПЕШНО ЗАВЕРШЕНА")
     print("==============================================")
     print(f" Автор / Copyright        : {COPYRIGHT}")
