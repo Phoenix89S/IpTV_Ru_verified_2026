@@ -52,19 +52,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          if git diff --exit-code --quiet CINERAMA_VERIFIED.m3u SKALA_DREG_REPORT.txt; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
+          # Проверяем, есть ли изменения или новые файлы
+          if git diff --exit-code --quiet || git status --porcelain | grep -E '(CINERAMA_VERIFIED.m3u|SKALA_DREG_REPORT.txt)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Commit and Push changes
         if: steps.git_status.outputs.changed == 'true'
         run: |
-          git add CINERAMA_VERIFIED.m3u
-          git add SKALA_DREG_REPORT.txt
-
-          COMMIT_MSG="chore: update CINERAMA_VERIFIED.m3u & SKALA_DREG_REPORT.txt ($(date +'%Y-%m-%d')) © Phoenix 89S"
-
-          git commit -m "$COMMIT_MSG"
+          git add CINERAMA_VERIFIED.m3u SKALA_DREG_REPORT.txt
+          git commit -m "chore: update CINERAMA_VERIFIED.m3u & SKALA_DREG_REPORT.txt ($(date +'%Y-%m-%d')) © Phoenix 89S"
           git push origin ${{ github.ref_name }}
