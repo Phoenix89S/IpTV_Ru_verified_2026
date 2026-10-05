@@ -2,12 +2,12 @@ name: Update CINERAMA Verified Playlist
 
 on:
   schedule:
-    - cron: '0 3 * * *'
+    - cron: '30 3 * * *'
   workflow_dispatch:
   push:
     paths:
       - 'Cinerama_verified.py'
-      - '.github/workflows/update-playlist.yml'
+      - '.github/workflows/Cinerama_Verified_playlist.yml'
 
 permissions:
   contents: write
@@ -15,7 +15,7 @@ permissions:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    name: Generate and push playlist
+    name: Generate Verified 1 playlist
 
     steps:
       - name: Checkout repository
@@ -34,16 +34,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Run playlist generator
+      - name: Run Verified 1 playlist generator
         run: |
           python Cinerama_verified.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: CINERAMA_OUTPUTS
+          name: CINERAMA_VERIFIED_1_OUTPUTS
           path: |
-            CINERAMA_VERIFIED.m3u
+            cinerama_Verified_1.m3u
             SKALA_DREG_REPORT.txt
 
       - name: Check for changes
@@ -52,8 +52,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Проверяем, есть ли изменения или новые файлы
-          if git diff --exit-code --quiet || git status --porcelain | grep -E '(CINERAMA_VERIFIED.m3u|SKALA_DREG_REPORT.txt)'; then
+          if git diff --exit-code --quiet || git status --porcelain | grep -E '(cinerama_Verified_1.m3u|SKALA_DREG_REPORT.txt)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -62,6 +61,6 @@ jobs:
       - name: Commit and Push changes
         if: steps.git_status.outputs.changed == 'true'
         run: |
-          git add CINERAMA_VERIFIED.m3u SKALA_DREG_REPORT.txt
-          git commit -m "chore: update CINERAMA_VERIFIED.m3u & SKALA_DREG_REPORT.txt ($(date +'%Y-%m-%d')) © Phoenix 89S"
+          git add cinerama_Verified_1.m3u SKALA_DREG_REPORT.txt
+          git commit -m "chore: update cinerama_Verified_1.m3u & SKALA_DREG_REPORT.txt ($(date +'%Y-%m-%d %H:%M:%S')) © Phoenix 89S"
           git push origin ${{ github.ref_name }}
